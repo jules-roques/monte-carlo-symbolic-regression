@@ -67,16 +67,16 @@ def main():
     
     plt.figure(figsize=(10, 6))
     
+    # Title and labels
+    plt.title("Symbolic Regression Benchmark: R² Scores", fontsize=16, pad=15)
+    plt.xlabel("Algorithm", fontsize=12)
+    plt.ylabel("R² Score", fontsize=12)
+    
     # Box plot
     ax = sns.boxplot(x="algo_name", y="r2", hue="run_type", data=df, width=0.6)
     
-    # Strip plot to show individual points
-    sns.stripplot(x="algo_name", y="r2", hue="run_type", data=df, size=4, color=".3", linewidth=0, dodge=True, alpha=0.7)
-    
-    # Title and labels
-    plt.title("✨ Symbolic Regression Benchmark: R² Scores", fontsize=16, pad=15)
-    plt.xlabel("Algorithm", fontsize=12)
-    plt.ylabel("R² Score", fontsize=12)
+    # Strip plot to show individual points (fixed seaborn deprecation warning)
+    sns.stripplot(x="algo_name", y="r2", hue="run_type", data=df, size=4, palette="dark:.3", linewidth=0, dodge=True, alpha=0.7)
     
     # Fix the legend (remove duplicate entries from stripplot)
     handles, labels = ax.get_legend_handles_labels()
