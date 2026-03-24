@@ -1,0 +1,6 @@
+numpy
+sympy
+datasets
+zss
+dotenv
+
