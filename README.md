@@ -1,21 +1,66 @@
-To install the project:
+# Monte Carlo Symbolic Regression
+
+This repository implements Symbolic Regression using Monte Carlo Tree Search techniques, specifically UCT and its AlphaZero-inspired variant PUCT (Predictor + UCT).
+
+## Installation
 
 ```bash
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-pip install -e .  # Install the project in editable mode, important for clean imports
+pip install -e .  # Install the project in editable mode
 ```
 
-To run the validation:
+## Configuration de l'environnement (Hugging Face)
+
+Le dataset `SRSD-easy` est hébergé sur Hugging Face. Pour éviter un message d'avertissement de limite de requêtes (*Rate Limit*), vous pouvez vous authentifier via un token.
+
+Copiez le fichier de modèle `.env.example` et renommez-le en `.env` :
 
 ```bash
-python scripts/run_validation.py --config configs/your_algo_config.json
+cp .env.example .env
 ```
 
-To run the test:
+Ouvrez le fichier `.env` nouvellement créé et insérez votre token Hugging Face associé à la variable `HF_TOKEN`. Ce fichier précise aussi que le dossier de cache de Hugging Face de vos datasets sera stocké dans un répertoire `./data` pour éviter de tout retélécharger à chaque fois, ce dernier étant bien sûr ignoré par `.gitignore`.
+
+## Workflow Complet : De l'Entraînement à la Visualisation
+
+### 1. Entraîner le Predictor (PUCT)
+Pour utiliser PUCT de manière optimale, il faut entraîner le réseau de neurones (`PredictorNN`) qui servira de guide (Value et Prior Policy) pendant la recherche.
 
 ```bash
-python scripts/run_test.py --config configs/your_algo_config.json
+python src/train.py
+```
+*Le script va générer des poids enregistrés dans le répertoire `checkpoints/`.*
+
+### 2. Lancer les Benchmarks
+Vous pouvez évaluer les différents algorithmes via les scripts de validation et de tests. 
+Par défaut, pour que l'évaluation reste rapide sur un seul CPU, le script ne teste que les **5 premières équations**. Vous pouvez modifier cette limite avec l'argument `--num-equations` (ou mettre `--num-equations 0` pour évaluer le dataset complet).
+
+**Tester UCT (Baseline) :**
+```bash
+python scripts/run_validation.py --config configs/uct_default.json --num-equations 5
 ```
 
+**Tester PUCT (Deep Learning) :**
+```bash
+# Utilisera automatiquement le dernier checkpoint grâce à puct_nn.json
+python scripts/run_validation.py --config configs/puct_nn.json --num-equations 5
+```
+
+*Note: Vous pouvez aussi cibler des équations spécifiques via `--equations feynman-i.12.1,feynman-i.12.4`.*
+À chaque exécution, les résultats détaillés sont automatiquement enregistrés sous format JSON dans le dossier **`logs/`**.
+
+### 3. Dashboard et Visualisation
+Une fois vos runs terminés pour UCT et PUCT, vous pouvez générer une comparaison sous forme de graphique Box-plot :
+
+```bash
+python scripts/visualize_benchmark.py
+```
+L'image `benchmark_r2.png` sera sauvegardée dans le dossier **`results/`**, illustrant les performances $R^2$ de chaque algorithme évalué !
+
+## Lancer les Tests Unitaires
+
+```bash
+pytest tests/
+```

@@ -1,4 +1,8 @@
-venv
+venv/
 .env
 *.pyc
 __pycache__
+.venv/
+data/
+src/monte_carlo_symbolic_regression.egg-info/
+.pytest_cache/

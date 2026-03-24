@@ -20,6 +20,7 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="SR on SRSD-Easy (Test)")
     parser.add_argument("--config", type=str, required=True, help="Path to JSON config file for algorithm")
     parser.add_argument("--equations", type=str, default=None, help="Comma-separated class names")
+    parser.add_argument("--num-equations", type=int, default=5, help="Number of max equations to evaluate")
     parser.add_argument("--output", type=str, default=None, help="JSON output path")
     return parser.parse_args()
 
@@ -107,6 +108,8 @@ def main() -> None:
 
     print("Loading SRSD-easy problems...")
     problems = load_srsd_easy_problems(equation_filter=equation_filter)
+    if not equation_filter and args.num_equations is not None and args.num_equations > 0:
+        problems = problems[:args.num_equations]
     
     results: list[dict] = []
     for i, problem in enumerate(problems):
@@ -117,10 +120,19 @@ def main() -> None:
 
     print_results_table(results)
 
-    if args.output:
-        with open(args.output, "w") as f:
-            json.dump(results, f, indent=2)
-        print(f"\nResults saved to {args.output}")
+    import os
+    import datetime
+    
+    output_path = args.output
+    if not output_path:
+        os.makedirs("logs", exist_ok=True)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        algo_name = config.get("algorithm", {}).get("class_name", "Unknown")
+        output_path = f"logs/test_{algo_name}_{timestamp}.json"
+
+    with open(output_path, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"\nResults saved to {output_path}")
 
 if __name__ == "__main__":
     main()

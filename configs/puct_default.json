@@ -1,0 +1,12 @@
+{
+  "algorithm": {
+    "module": "mcsr.algos.puct",
+    "class_name": "PUCT",
+    "kwargs": {
+      "max_atoms": 15,
+      "num_iterations": 2000,
+      "exploration_constant": 1.0,
+      "seed": 42
+    }
+  }
+}

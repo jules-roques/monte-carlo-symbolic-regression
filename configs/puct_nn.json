@@ -1,0 +1,13 @@
+{
+  "algorithm": {
+    "module": "mcsr.algos.puct",
+    "class_name": "PUCT",
+    "kwargs": {
+      "max_atoms": 7,
+      "num_iterations": 200,
+      "exploration_constant": 1.0,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_2.pt"
+    }
+  }
+}

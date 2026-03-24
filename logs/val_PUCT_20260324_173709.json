@@ -1,0 +1,24 @@
+[
+  {
+    "name": "feynman-i.12.1",
+    "class_name": "feynman-i.12.1",
+    "discovered_expression": "log(1.0)",
+    "num_atoms": 2,
+    "train_fitness": -0.103536,
+    "val_fitness": -0.108541,
+    "train_r2": -0.217792,
+    "val_r2": -0.228863,
+    "elapsed_seconds": 0.02
+  },
+  {
+    "name": "feynman-i.12.4",
+    "class_name": "feynman-i.12.4",
+    "discovered_expression": "x0",
+    "num_atoms": 1,
+    "train_fitness": -8e-06,
+    "val_fitness": -0.000877,
+    "train_r2": -1.6e-05,
+    "val_r2": -0.001754,
+    "elapsed_seconds": 0.02
+  }
+]
