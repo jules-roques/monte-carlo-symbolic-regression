@@ -29,9 +29,9 @@ Ouvrez le fichier `.env` nouvellement créé et insérez votre token Hugging Fac
 Pour utiliser PUCT de manière optimale, il faut entraîner le réseau de neurones (`PredictorNN`) qui servira de guide (Value et Prior Policy) pendant la recherche.
 
 ```bash
-python src/train.py
+python src/train.py --epochs 30
 ```
-*Le script va générer des poids enregistrés dans le répertoire `checkpoints/`.*
+*Le script extraira des trajectoires MCTS et générera des poids enregistrés dans le répertoire `checkpoints/`.*
 
 ### 2. Lancer les Benchmarks
 Vous pouvez évaluer les différents algorithmes via les scripts de validation et de tests. 

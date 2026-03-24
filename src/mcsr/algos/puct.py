@@ -88,8 +88,11 @@ def puct_search(
         
         if not valid_atoms:
             node.fully_explored = True
-            predicted = Expression(partial_sequence).evaluate(input_data)
-            fitness = compute_fitness(predicted, target)
+            try:
+                predicted = Expression(partial_sequence).evaluate(input_data)
+                fitness = compute_fitness(predicted, target)
+            except Exception:
+                fitness = -1e6
             _update_best(best_state, partial_sequence, fitness)
             return fitness
 
@@ -127,8 +130,11 @@ def puct_search(
     new_remaining = remaining_leaves + best_child_atom.arity - 1
 
     if new_remaining == 0:
-        predicted = Expression(new_sequence).evaluate(input_data)
-        score = compute_fitness(predicted, target)
+        try:
+            predicted = Expression(new_sequence).evaluate(input_data)
+            score = compute_fitness(predicted, target)
+        except Exception:
+            score = -1e6
         _update_best(best_state, new_sequence, score)
         best_child.fully_explored = True
         best_child.sum_scores += score
@@ -169,6 +175,7 @@ class PUCT(ResearchAlgoInterface):
         seed: Optional[int] = None,
         predictor: Optional[PredictorInterface] = None,
         checkpoint_path: Optional[str] = None,
+        model_num_variables: Optional[int] = None,
     ):
         super().__init__(grammar=grammar, max_atoms=max_atoms, seed=seed)
         self.num_iterations = num_iterations
@@ -180,10 +187,16 @@ class PUCT(ResearchAlgoInterface):
             import torch
             import os
             from mcsr.utils.predictor import PredictorNN
-            net = PredictorNN(grammar=grammar)
+            # Use a fixed-size grammar for the NN if model_num_variables is given.
+            # This allows loading a checkpoint trained with more variables than the
+            # current problem has, while the search tree still uses problem's grammar.
+            if model_num_variables is not None and model_num_variables != grammar.num_variables:
+                model_grammar = Grammar(num_variables=model_num_variables)
+            else:
+                model_grammar = grammar
+            net = PredictorNN(grammar=model_grammar)
             if os.path.exists(checkpoint_path):
                 net.load_state_dict(torch.load(checkpoint_path, weights_only=True))
-                # Set to eval mode is done in predict()
             else:
                 print(f"Warning: Checkpoint {checkpoint_path} not found. Using untrained weights.")
             self.predictor = net

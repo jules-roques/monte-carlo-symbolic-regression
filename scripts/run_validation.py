@@ -68,6 +68,7 @@ def run_single_problem(problem: SRSDProblem, config: dict) -> dict:
         "train_r2": float(round(train_r2, 6)),
         "val_r2": float(round(val_r2, 6)),
         "elapsed_seconds": round(elapsed, 2),
+        "config": kwargs,
     }
 
 

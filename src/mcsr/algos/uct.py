@@ -50,8 +50,11 @@ def random_playout(
         current_index += 1
         leaves += chosen.arity - 1
 
-    predicted = Expression(sequence).evaluate(input_data)
-    fitness = compute_fitness(predicted, target)
+    try:
+        predicted = Expression(sequence).evaluate(input_data)
+        fitness = compute_fitness(predicted, target)
+    except Exception:
+        fitness = 0.0  # neutre : ne biaise pas les moyennes UCT
     return sequence, fitness
 
 
@@ -110,7 +113,6 @@ def uct_search(
         return score
 
     # --- Selection phase: pick best child via UCB ---
-    best_ucb = -float("inf")
     best_ucb = -float("inf")
     best_child: Optional[UCTNode] = None
 
@@ -199,15 +201,15 @@ class UCT(ResearchAlgoInterface):
             random.seed(self.seed)
             np.random.seed(self.seed)
 
-        root = UCTNode()
+        self.root = UCTNode()
         best = _BestState()
 
         for iteration in range(self.num_iterations):
-            if root.fully_explored:
+            if self.root.fully_explored:
                 break
 
             uct_search(
-                node=root,
+                node=self.root,
                 partial_sequence=[],
                 remaining_leaves=1,
                 max_atoms=self.max_atoms,

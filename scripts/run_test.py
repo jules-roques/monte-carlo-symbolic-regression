@@ -73,6 +73,7 @@ def run_single_problem(problem: SRSDProblem, config: dict) -> dict:
         "test_r2": float(round(test_r2, 6)),
         "edit_distance": float(round(edit_distance, 4)),
         "elapsed_seconds": round(elapsed, 2),
+        "algo_config": algo_config,
     }
 
 
