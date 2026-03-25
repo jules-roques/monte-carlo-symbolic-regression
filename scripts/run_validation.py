@@ -20,7 +20,8 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="SR on SRSD-Easy (Validation)")
     parser.add_argument("--config", type=str, required=True, help="Path to JSON config file for algorithm")
     parser.add_argument("--equations", type=str, default=None, help="Comma-separated class names")
-    parser.add_argument("--num-equations", type=int, default=5, help="Number of max equations to evaluate")
+    parser.add_argument("--num-equations", type=int, default=8, help="Number of max equations to evaluate")
+    parser.add_argument("--max-true-atoms", type=int, default=None, help="Max length (atoms) of the target equation. Overrides config max_atoms if smaller.")
     parser.add_argument("--output", type=str, default=None, help="JSON output path")
     return parser.parse_args()
 
@@ -102,9 +103,24 @@ def main() -> None:
     equation_filter = [e.strip() for e in args.equations.split(",")] if args.equations else None
 
     print("Loading SRSD-easy problems...")
-    problems = load_srsd_easy_problems(equation_filter=equation_filter)
-    if not equation_filter and args.num_equations is not None and args.num_equations > 0:
-        problems = problems[:args.num_equations]
+    all_problems = load_srsd_easy_problems(equation_filter=equation_filter)
+    
+    problems = []
+    max_atoms_allowed = config.get("algorithm", {}).get("kwargs", {}).get("max_atoms", 15)
+    if args.max_true_atoms is not None:
+        max_atoms_allowed = min(max_atoms_allowed, args.max_true_atoms)
+        
+    for problem in all_problems:
+        if problem.true_expression is not None:
+            num_true_atoms = len(problem.true_expression.atom_sequence)
+            if num_true_atoms >= max_atoms_allowed:
+                print(f"Skipping {problem.name}: true equation has {num_true_atoms} atoms (>= {max_atoms_allowed})")
+                continue
+        problems.append(problem)
+        
+        if not equation_filter and args.num_equations is not None and args.num_equations > 0:
+            if len(problems) >= args.num_equations:
+                break
     
     results: list[dict] = []
     for i, problem in enumerate(problems):
