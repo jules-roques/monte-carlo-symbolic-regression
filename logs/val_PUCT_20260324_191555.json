@@ -1,0 +1,97 @@
+[
+  {
+    "name": "feynman-i.12.1",
+    "class_name": "feynman-i.12.1",
+    "discovered_expression": "(0.5 * sin(0.1))",
+    "num_atoms": 4,
+    "train_fitness": -0.000248,
+    "val_fitness": -0.000836,
+    "train_r2": -0.000496,
+    "val_r2": -0.001672,
+    "elapsed_seconds": 10.19,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  },
+  {
+    "name": "feynman-i.12.4",
+    "class_name": "feynman-i.12.4",
+    "discovered_expression": "(x0 * 10.0)",
+    "num_atoms": 3,
+    "train_fitness": -8e-06,
+    "val_fitness": -0.000877,
+    "train_r2": -1.6e-05,
+    "val_r2": -0.001754,
+    "elapsed_seconds": 10.25,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  },
+  {
+    "name": "feynman-i.12.5",
+    "class_name": "feynman-i.12.5",
+    "discovered_expression": "log((0.5 + cos((sin(0.1) / 0.1))))",
+    "num_atoms": 8,
+    "train_fitness": -0.0,
+    "val_fitness": -8.1e-05,
+    "train_r2": -0.0,
+    "val_r2": -0.000162,
+    "elapsed_seconds": 10.08,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  },
+  {
+    "name": "feynman-i.14.3",
+    "class_name": "feynman-i.14.3",
+    "discovered_expression": "x1",
+    "num_atoms": 1,
+    "train_fitness": 0.173041,
+    "val_fitness": 0.15732,
+    "train_r2": 0.316139,
+    "val_r2": 0.28989,
+    "elapsed_seconds": 10.01,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  },
+  {
+    "name": "feynman-i.14.4",
+    "class_name": "feynman-i.14.4",
+    "discovered_expression": "(10.0 * 10.0)",
+    "num_atoms": 3,
+    "train_fitness": -0.001196,
+    "val_fitness": -0.002052,
+    "train_r2": -0.002394,
+    "val_r2": -0.004109,
+    "elapsed_seconds": 10.98,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  }
+]

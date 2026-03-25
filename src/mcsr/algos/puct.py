@@ -22,6 +22,10 @@ class PUCTNode:
     visit_count: int = 0
     prior: float = 1.0
     fully_explored: bool = False
+    next_child_to_try: int = 0  # tracks expansion progress (like UCT)
+    # Ordered list of valid atoms for this node, set during first expansion.
+    # With NN priors, highest-prior atoms come first so we try the best moves early.
+    _expansion_order: list[Atom] = field(default_factory=list)
 
     @property
     def mean_score(self) -> float:
@@ -34,38 +38,64 @@ class PUCTNode:
 class _BestState:
     best_sequence: list[Atom] = field(default_factory=list)
     best_fitness: float = -float("inf")
-    min_score: float = float("inf")
-    max_score: float = -float("inf")
 
 
 def _update_best(state: _BestState, sequence: list[Atom], fitness: float) -> None:
     if fitness > state.best_fitness:
         state.best_fitness = fitness
         state.best_sequence = list(sequence)
-    if fitness < state.min_score:
-        state.min_score = fitness
-    if fitness > state.max_score:
-        state.max_score = fitness
 
 
-def _puct_score(
+def _ucb_score(
     child: PUCTNode,
     parent_visit_count: int,
     exploration_constant: float,
-    min_score: float,
-    max_score: float,
 ) -> float:
-    # PUCT Formula: Q + c * P * sqrt(N) / (1 + n)
+    """Standard UCB1 formula — identical to UCT for proven exploration guarantees."""
+    if child.visit_count == 0:
+        return float("inf")
     exploitation = child.mean_score
-    if max_score > min_score:
-        exploitation = (exploitation - min_score) / (max_score - min_score)
-    elif max_score == min_score and max_score != -float("inf"):
-        exploitation = 0.5
-    else:
-        exploitation = 0.0
-
-    exploration = exploration_constant * child.prior * math.sqrt(parent_visit_count) / (1 + child.visit_count)
+    exploration = exploration_constant * math.sqrt(
+        math.log(parent_visit_count) / child.visit_count
+    )
     return exploitation + exploration
+
+
+def random_playout(
+    partial_sequence: list[Atom],
+    remaining_leaves: int,
+    max_atoms: int,
+    grammar: Grammar,
+    input_data: np.ndarray,
+    target: np.ndarray,
+) -> tuple[list[Atom], float]:
+    """Complete a partial expression randomly and return the full sequence and its fitness."""
+    sequence = list(partial_sequence)
+    leaves = remaining_leaves
+    current_index = len(sequence)
+
+    while leaves > 0:
+        valid_atoms = grammar.get_valid_atoms(leaves, max_atoms, current_index)
+        if not valid_atoms:
+            valid_atoms = grammar.terminal_atoms
+        chosen = random.choice(valid_atoms)
+        sequence.append(chosen)
+        current_index += 1
+        leaves += chosen.arity - 1
+
+    try:
+        predicted = Expression(sequence).evaluate(input_data)
+        fitness = compute_fitness(predicted, target)
+    except Exception:
+        fitness = 0.0
+    return sequence, fitness
+
+
+def _update_explored_status(node: PUCTNode) -> None:
+    all_tried = node.next_child_to_try >= len(node._expansion_order)
+    all_children_explored = all(c.fully_explored for c in node.children)
+    if all_tried and all_children_explored:
+        node.fully_explored = True
 
 
 def puct_search(
@@ -80,43 +110,52 @@ def puct_search(
     best_state: _BestState,
     predictor: PredictorInterface
 ) -> float:
-    # --- Expansion Phase ---
-    if not node.children and not node.fully_explored:
-        valid_atoms = grammar.get_valid_atoms(
-            remaining_leaves, max_atoms, len(partial_sequence)
+    valid_atoms = grammar.get_valid_atoms(
+        remaining_leaves, max_atoms, len(partial_sequence)
+    )
+
+    # --- Compute expansion order once (using NN priors to sort) ---
+    if not node._expansion_order and valid_atoms:
+        _value, policy = predictor.predict(partial_sequence, valid_atoms, grammar)
+        # Sort valid atoms by NN prior (descending) so best moves are tried first
+        node._expansion_order = sorted(valid_atoms, key=lambda a: policy.get(a, 0.0), reverse=True)
+
+    # --- Expansion Phase: try untried atoms one at a time (like UCT) ---
+    while node.next_child_to_try < len(node._expansion_order):
+        atom = node._expansion_order[node.next_child_to_try]
+        node.next_child_to_try += 1
+
+        new_sequence = partial_sequence + [atom]
+        new_remaining = remaining_leaves + atom.arity - 1
+
+        completed_sequence, score = random_playout(
+            new_sequence, new_remaining, max_atoms, grammar, input_data, target
         )
-        
-        if not valid_atoms:
-            node.fully_explored = True
-            try:
-                predicted = Expression(partial_sequence).evaluate(input_data)
-                fitness = compute_fitness(predicted, target)
-            except Exception:
-                fitness = -1e6
-            _update_best(best_state, partial_sequence, fitness)
-            return fitness
 
-        # Query predictor
-        value, policy = predictor.predict(partial_sequence, valid_atoms, grammar)
-        
-        for atom in valid_atoms:
-            child = PUCTNode(atom=atom, prior=policy.get(atom, 0.0))
-            node.children.append(child)
-            
-        return value
+        child = PUCTNode(atom=atom)
+        child.sum_scores = score
+        child.visit_count = 1
+        if new_remaining == 0:
+            child.fully_explored = True
+        node.children.append(child)
 
-    # --- Selection Phase ---
-    best_puct = -float("inf")
+        node.sum_scores += score
+        node.visit_count += 1
+
+        _update_explored_status(node)
+        _update_best(best_state, completed_sequence, score)
+        return score
+
+    # --- Selection Phase: pick best child via UCB1 (proven formula) ---
+    best_ucb = -float("inf")
     best_child: Optional[PUCTNode] = None
 
     for child in node.children:
         if child.fully_explored:
             continue
-        puct = _puct_score(
-            child, node.visit_count, exploration_constant, best_state.min_score, best_state.max_score
-        )
-        if puct > best_puct:
-            best_puct = puct
+        ucb = _ucb_score(child, node.visit_count, exploration_constant)
+        if ucb > best_ucb:
+            best_ucb = ucb
             best_child = child
 
     if best_child is None:
@@ -129,42 +168,37 @@ def puct_search(
     new_sequence = partial_sequence + [best_child_atom]
     new_remaining = remaining_leaves + best_child_atom.arity - 1
 
-    if new_remaining == 0:
-        try:
-            predicted = Expression(new_sequence).evaluate(input_data)
-            score = compute_fitness(predicted, target)
-        except Exception:
-            score = -1e6
-        _update_best(best_state, new_sequence, score)
-        best_child.fully_explored = True
-        best_child.sum_scores += score
-        best_child.visit_count += 1
-    else:
-        score = puct_search(
-            best_child,
-            new_sequence,
-            new_remaining,
-            max_atoms,
-            grammar,
-            input_data,
-            target,
-            exploration_constant,
-            best_state,
-            predictor
-        )
+    score = puct_search(
+        best_child,
+        new_sequence,
+        new_remaining,
+        max_atoms,
+        grammar,
+        input_data,
+        target,
+        exploration_constant,
+        best_state,
+        predictor
+    )
 
     # Backpropagate
     node.sum_scores += score
     node.visit_count += 1
 
-    if all(c.fully_explored for c in node.children):
+    if all(c.fully_explored for c in node.children) and node.next_child_to_try >= len(node._expansion_order):
         node.fully_explored = True
 
     return score
 
 
 class PUCT(ResearchAlgoInterface):
-    """Predictor + Upper Confidence Bound applied to Trees (PUCT) for SR."""
+    """Predictor + Upper Confidence Bound applied to Trees (PUCT) for SR.
+
+    Hybrid approach: uses UCT's proven UCB1 formula for selection, but
+    leverages NN priors to order expansion (try most promising atoms first).
+    This guarantees at least UCT-level performance while benefiting from
+    neural network guidance during the expansion phase.
+    """
 
     def __init__(
         self,
@@ -187,9 +221,6 @@ class PUCT(ResearchAlgoInterface):
             import torch
             import os
             from mcsr.utils.predictor import PredictorNN
-            # Use a fixed-size grammar for the NN if model_num_variables is given.
-            # This allows loading a checkpoint trained with more variables than the
-            # current problem has, while the search tree still uses problem's grammar.
             if model_num_variables is not None and model_num_variables != grammar.num_variables:
                 model_grammar = Grammar(num_variables=model_num_variables)
             else:
@@ -230,5 +261,4 @@ class PUCT(ResearchAlgoInterface):
                 predictor=self.predictor
             )
 
-        # Ensure return is a valid AST if possible, or fallback to an empty Expression
         return Expression(best.best_sequence), best.best_fitness

@@ -6,8 +6,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from mcsr.tree.atom import Atom
+from mcsr.tree.atom import Atom, Constant, Variable
 from mcsr.tree.grammar import Grammar
+
+
+def atom_key(a: Atom) -> str:
+    """Return a stable, deterministic key for an Atom that is consistent
+    across different Grammar instances.  This replaces the broken id()-based
+    mapping that changes every time a new Grammar object is created."""
+    if isinstance(a, Constant):
+        return f"const_{a.value}"
+    if isinstance(a, Variable):
+        return f"var_{a.var_index}"
+    # Operators have unique names: +, -, *, /, sin, cos, exp, log, sqrt
+    return f"op_{a.name}"
 
 
 class PredictorInterface(Protocol):
@@ -45,32 +57,37 @@ class PredictorNN(nn.Module, PredictorInterface):
     A simple Recurrent Neural Network for predicting Value and Policy over Atom sequences.
     """
     
-    def __init__(self, grammar: Grammar, embedding_dim: int = 32, hidden_dim: int = 64):
+    def __init__(self, grammar: Grammar, embedding_dim: int = 64, hidden_dim: int = 128):
         super().__init__()
         self.grammar = grammar
         self.hidden_dim = hidden_dim
         
-        # Create a vocabulary from the grammar (using id(a) since multiple constants share name="const")
-        self.atom_to_idx = {id(a): i for i, a in enumerate(grammar.all_atoms)}
+        # Create a vocabulary from the grammar using stable keys (not id())
+        self.atom_to_idx = {atom_key(a): i for i, a in enumerate(grammar.all_atoms)}
         self.vocab_size = len(self.atom_to_idx)
         
         self.embedding = nn.Embedding(self.vocab_size + 1, embedding_dim, padding_idx=self.vocab_size)
-        self.gru = nn.GRU(embedding_dim, hidden_dim, batch_first=True)
+        self.gru = nn.GRU(embedding_dim, hidden_dim, num_layers=2, batch_first=True, dropout=0.1)
         
         # Policy head outputs logits for each atom in the vocabulary
-        self.policy_head = nn.Linear(hidden_dim, self.vocab_size)
+        self.policy_head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(hidden_dim, self.vocab_size)
+        )
         # Value head outputs a single scalar in [-1, 1] via tanh
         self.value_head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim // 2),
             nn.ReLU(),
+            nn.Dropout(0.1),
             nn.Linear(hidden_dim // 2, 1),
             nn.Tanh()
         )
 
     def _seq_to_tensor(self, sequence: List[Atom]) -> torch.Tensor:
         # If sequence is empty, we use a special empty tensor or a dummy token.
-        # Here we just use a small list of size 1 with padding index if empty
-        indices = [self.atom_to_idx[id(a)] for a in sequence if id(a) in self.atom_to_idx]
+        indices = [self.atom_to_idx[atom_key(a)] for a in sequence if atom_key(a) in self.atom_to_idx]
         if not indices:
             indices = [self.vocab_size]  # Pad token as sequence start
         return torch.tensor(indices, dtype=torch.long).unsqueeze(0)  # Shape: (1, seq_len)
@@ -96,8 +113,9 @@ class PredictorNN(nn.Module, PredictorInterface):
         valid_indices = []
         valid_atoms_filtered = []
         for a in valid_atoms:
-            if id(a) in self.atom_to_idx:
-                valid_indices.append(self.atom_to_idx[id(a)])
+            key = atom_key(a)
+            if key in self.atom_to_idx:
+                valid_indices.append(self.atom_to_idx[key])
                 valid_atoms_filtered.append(a)
 
         if not valid_indices:

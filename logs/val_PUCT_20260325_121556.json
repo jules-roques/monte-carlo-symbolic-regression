@@ -1,0 +1,97 @@
+[
+  {
+    "name": "feynman-i.12.1",
+    "class_name": "feynman-i.12.1",
+    "discovered_expression": "sin(sin(sin((x1 * x0))))",
+    "num_atoms": 6,
+    "train_fitness": 0.843462,
+    "val_fitness": 0.869144,
+    "train_r2": 0.975496,
+    "val_r2": 0.982877,
+    "elapsed_seconds": 18.78,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  },
+  {
+    "name": "feynman-i.12.4",
+    "class_name": "feynman-i.12.4",
+    "discovered_expression": "sin(cos(cos((((log(cos((10.0 * (x0 / 5.0)))) - x1) / 0.5) * x0))))",
+    "num_atoms": 16,
+    "train_fitness": -0.0,
+    "val_fitness": -4.2e-05,
+    "train_r2": -0.0,
+    "val_r2": -0.000138,
+    "elapsed_seconds": 19.96,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  },
+  {
+    "name": "feynman-i.12.5",
+    "class_name": "feynman-i.12.5",
+    "discovered_expression": "cos(exp((x1 * (((1.0 - (x0 - 3.0)) - log(10.0)) - 2.0))))",
+    "num_atoms": 14,
+    "train_fitness": 0.017659,
+    "val_fitness": 0.019058,
+    "train_r2": 0.035006,
+    "val_r2": 0.037753,
+    "elapsed_seconds": 23.08,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  },
+  {
+    "name": "feynman-i.14.3",
+    "class_name": "feynman-i.14.3",
+    "discovered_expression": "(1.0 * (2.0 * x1))",
+    "num_atoms": 5,
+    "train_fitness": 0.244392,
+    "val_fitness": 0.245172,
+    "train_r2": 0.429057,
+    "val_r2": 0.430235,
+    "elapsed_seconds": 15.85,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  },
+  {
+    "name": "feynman-i.14.4",
+    "class_name": "feynman-i.14.4",
+    "discovered_expression": "cos(exp((sin(cos((0.1 * sqrt((0.1 - x1))))) - 10.0)))",
+    "num_atoms": 12,
+    "train_fitness": -0.023803,
+    "val_fitness": -0.023869,
+    "train_r2": -0.06434,
+    "val_r2": -0.064401,
+    "elapsed_seconds": 21.21,
+    "config": {
+      "max_atoms": 15,
+      "num_iterations": 50000,
+      "exploration_constant": 0.5,
+      "seed": 42,
+      "checkpoint_path": "checkpoints/predictor_epoch_final.pt",
+      "model_num_variables": 5
+    }
+  }
+]
