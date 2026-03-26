@@ -1,0 +1,15 @@
+{
+  "algorithm": {
+    "module": "mcsr.algos.dgsr_mcts",
+    "class_name": "DGSR_MCTS",
+    "kwargs": {
+      "max_atoms": 8,
+      "num_iterations": 1000,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "mutator_path": "checkpoints/mutator_final.pt",
+      "seed": 42
+    }
+  }
+}

@@ -1,0 +1,154 @@
+[
+  {
+    "name": "feynman-i.12.1",
+    "class_name": "feynman-i.12.1",
+    "discovered_expression": "0.1",
+    "num_atoms": 1,
+    "train_fitness": -0.123837,
+    "val_fitness": -0.147057,
+    "train_r2": -0.26301,
+    "val_r2": -0.315739,
+    "elapsed_seconds": 0.01,
+    "config": {
+      "max_atoms": 8,
+      "num_iterations": 100,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "seed": 42
+    }
+  },
+  {
+    "name": "feynman-i.12.5",
+    "class_name": "feynman-i.12.5",
+    "discovered_expression": "0.1",
+    "num_atoms": 1,
+    "train_fitness": -1.3e-05,
+    "val_fitness": -0.000176,
+    "train_r2": -2.7e-05,
+    "val_r2": -0.000352,
+    "elapsed_seconds": 0.01,
+    "config": {
+      "max_atoms": 8,
+      "num_iterations": 100,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "seed": 42
+    }
+  },
+  {
+    "name": "feynman-i.14.3",
+    "class_name": "feynman-i.14.3",
+    "discovered_expression": "x1",
+    "num_atoms": 1,
+    "train_fitness": 0.173041,
+    "val_fitness": 0.15732,
+    "train_r2": 0.316139,
+    "val_r2": 0.28989,
+    "elapsed_seconds": 0.01,
+    "config": {
+      "max_atoms": 8,
+      "num_iterations": 100,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "seed": 42
+    }
+  },
+  {
+    "name": "feynman-i.14.4",
+    "class_name": "feynman-i.14.4",
+    "discovered_expression": "sqrt(x0)",
+    "num_atoms": 2,
+    "train_fitness": -0.001163,
+    "val_fitness": -0.004745,
+    "train_r2": -0.002327,
+    "val_r2": -0.009512,
+    "elapsed_seconds": 0.01,
+    "config": {
+      "max_atoms": 8,
+      "num_iterations": 100,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "seed": 42
+    }
+  },
+  {
+    "name": "feynman-i.18.12",
+    "class_name": "feynman-i.18.12",
+    "discovered_expression": "sin(x2)",
+    "num_atoms": 2,
+    "train_fitness": 0.035309,
+    "val_fitness": 0.034244,
+    "train_r2": 0.069372,
+    "val_r2": 0.067315,
+    "elapsed_seconds": 0.01,
+    "config": {
+      "max_atoms": 8,
+      "num_iterations": 100,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "seed": 42
+    }
+  },
+  {
+    "name": "feynman-i.25.13",
+    "class_name": "feynman-i.25.13",
+    "discovered_expression": "x0",
+    "num_atoms": 1,
+    "train_fitness": -3.4e-05,
+    "val_fitness": -0.000266,
+    "train_r2": -6.9e-05,
+    "val_r2": -0.000532,
+    "elapsed_seconds": 0.01,
+    "config": {
+      "max_atoms": 8,
+      "num_iterations": 100,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "seed": 42
+    }
+  },
+  {
+    "name": "feynman-i.26.2",
+    "class_name": "feynman-i.26.2",
+    "discovered_expression": "5.0",
+    "num_atoms": 1,
+    "train_fitness": -5.2e-05,
+    "val_fitness": -0.018984,
+    "train_r2": -0.000104,
+    "val_r2": -0.038328,
+    "elapsed_seconds": 0.01,
+    "config": {
+      "max_atoms": 8,
+      "num_iterations": 100,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "seed": 42
+    }
+  },
+  {
+    "name": "feynman-ii.27.16",
+    "class_name": "feynman-ii.27.16",
+    "discovered_expression": "log(1.0)",
+    "num_atoms": 2,
+    "train_fitness": -0.133235,
+    "val_fitness": -0.134821,
+    "train_r2": -0.284222,
+    "val_r2": -0.287819,
+    "elapsed_seconds": 0.01,
+    "config": {
+      "max_atoms": 8,
+      "num_iterations": 100,
+      "exploration_constant": 0.5,
+      "lambda_complexity": 0.01,
+      "num_mutations_per_expansion": 5,
+      "seed": 42
+    }
+  }
+]
