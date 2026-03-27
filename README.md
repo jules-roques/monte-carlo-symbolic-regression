@@ -64,3 +64,38 @@ L'image `benchmark_r2.png` sera sauvegardée dans le dossier **`results/`**, ill
 ```bash
 pytest tests/
 ```
+
+## Cas typique
+### NMCS
+```bash
+source .venv/bin/activate && python scripts/run_validation.py --config configs/nmcs_default.json --max-true-atoms 6 && python scripts/visualize_benchmark.py
+```
+### UCT
+```bash
+source .venv/bin/activate && python scripts/run_validation.py --config configs/uct_default.json --max-true-atoms 6 && python scripts/visualize_benchmark.py
+```
+### PUCT
+Training de base
+```bash
+source .venv/bin/activate && python src/train.py --epochs 30
+```
+Training supplémentaire pour affiner la distribution de proba sur les atomes simples
+```bash
+source .venv/bin/activate && python src/train_2.py --epochs 30
+```
+
+```bash
+source .venv/bin/activate && python scripts/run_validation.py --config configs/puct_nn.json --max-true-atoms 6 && python scripts/visualize_benchmark.py
+```
+
+### DGSR_MCTS
+Training
+```bash
+source .venv/bin/activate && python src/train_dgsr.py --epochs 30
+```
+
+```bash
+source .venv/bin/activate && python scripts/run_validation.py --config configs/dgsr_mcts.json --max-true-atoms 6 && python scripts/visualize_benchmark.py
+```
+
+### + edit les fichiers de conf pour les hyperparametres des algos
