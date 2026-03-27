@@ -58,36 +58,83 @@ def main():
         print("No R2 column ('test_r2' or 'val_r2') found in the dataset.")
         return
     
+    # Add 'method' column for consistency with instructions
+    df['method'] = df['algo_name']
+    
+    # Define a consistent palette for 'method' to ensure consistency across plots
+    unique_methods = sorted(df['method'].unique())
+    method_palette = dict(zip(unique_methods, sns.color_palette("husl", len(unique_methods))))
+    
     os.makedirs("results", exist_ok=True)
     
-    print(f"Compiling {len(df)} entries into a beautiful Matplotlib graph...")
+    print(f"Compiling {len(df)} entries into beautiful Matplotlib graphs...")
     
     # Set the style for seaborn
     sns.set_theme(style="darkgrid", palette="pastel")
     
+    # --- Plot 1: R2 Boxplot (Consistent Coloring) ---
     plt.figure(figsize=(10, 6))
-    
-    # Title and labels
-    plt.title("Symbolic Regression Benchmark: R² Scores", fontsize=16, pad=15)
+    plt.title("Symbolic Regression Benchmark: R² Scores by Algorithm", fontsize=16, pad=15)
     plt.xlabel("Algorithm", fontsize=12)
     plt.ylabel("R² Score", fontsize=12)
     
-    # Box plot
-    ax = sns.boxplot(x="algo_name", y="r2", hue="run_type", data=df, width=0.6)
-    
-    # Strip plot to show individual points (fixed seaborn deprecation warning)
-    sns.stripplot(x="algo_name", y="r2", hue="run_type", data=df, size=4, palette="dark:.3", linewidth=0, dodge=True, alpha=0.7)
-    
-    # Fix the legend (remove duplicate entries from stripplot)
-    handles, labels = ax.get_legend_handles_labels()
-    n_colors = len(df['run_type'].unique())
-    plt.legend(handles[:n_colors], labels[:n_colors], title="Evaluation Stage", bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Using method_palette to match other plots
+    ax = sns.boxplot(x="method", y="r2", hue="method", data=df, palette=method_palette, width=0.6, legend=False)
+    sns.stripplot(x="method", y="r2", hue="method", data=df, size=4, palette="dark:.3", linewidth=0, alpha=0.5, legend=False)
     
     plt.tight_layout()
-    
     out_path = "results/benchmark_r2.png"
     plt.savefig(out_path, dpi=300, bbox_inches='tight')
     plt.close()
+    print(f"✅ R2 Boxplot Saved! -> {out_path}")
+
+    # --- Plot 2: Heatmap (Equation × Method) ---
+    try:
+        pivot = df.pivot_table(index="name", columns="method", values="r2", aggfunc='mean')
+        
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(pivot, annot=True, cmap="viridis", fmt=".3f")
+        plt.title("Heatmap: Mean R² Scores by Equation and Method")
+        plt.xlabel("Method")
+        plt.ylabel("Equation")
+        plt.tight_layout()
+        heatmap_path = "results/heatmap.png"
+        plt.savefig(heatmap_path)
+        plt.close()
+        print(f"✅ Heatmap Saved! -> {heatmap_path}")
+    except Exception as e:
+        print(f"⚠️ Could not generate heatmap: {e}")
+
+    # --- Plot 3: Grouped Bar Chart (by Equation) ---
+    plt.figure(figsize=(12, 6))
+    sns.barplot(data=df, x="name", y="r2", hue="method", palette=method_palette)
+    plt.xticks(rotation=45, ha='right')
+    plt.title("R² Score per Equation")
+    plt.xlabel("Equation Name")
+    plt.ylabel("R² Score")
+    plt.legend(title="Method", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    barplot_path = "results/barplot_grouped.png"
+    plt.savefig(barplot_path)
+    plt.close()
+    print(f"✅ Grouped Bar Chart Saved! -> {barplot_path}")
+
+    # --- Plot 4: Scatter Plot (R² vs Time) ---
+    if 'elapsed_seconds' in df.columns:
+        plt.figure(figsize=(10, 6))
+        sns.scatterplot(data=df, x="elapsed_seconds", y="r2", hue="method", style="run_type", s=100, palette=method_palette)
+        plt.title("Performance (R²) vs Execution Time")
+        plt.xlabel("Elapsed Seconds")
+        plt.ylabel("R² Score")
+        plt.grid(True, linestyle='--', alpha=0.6)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.tight_layout()
+        scatter_path = "results/scatter_time_vs_r2.png"
+        plt.savefig(scatter_path)
+        plt.close()
+        print(f"✅ Scatter Plot Saved! -> {scatter_path}")
+    else:
+        print("⚠️ 'elapsed_seconds' not found, skipping scatter plot.")
     
     print(f"✅ Dashboard Image Saved! -> {out_path}")
 
