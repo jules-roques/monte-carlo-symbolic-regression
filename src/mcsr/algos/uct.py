@@ -112,7 +112,6 @@ def uct_search(
 
     # --- Selection phase: pick best child via UCB ---
     best_ucb = -float("inf")
-    best_ucb = -float("inf")
     best_child: Optional[UCTNode] = None
 
     for child in node.children:
@@ -191,15 +190,15 @@ class UCT(SRAlgorithm):
 
     def _fit(self, input_data: np.ndarray, target: np.ndarray) -> Expression:
 
-        root = UCTNode()
+        self.root = UCTNode()
         best = _BestState()
 
         for iteration in range(self.num_iterations):
-            if root.fully_explored:
+            if self.root.fully_explored:
                 break
 
             uct_search(
-                node=root,
+                node=self.root,
                 partial_sequence=[],
                 remaining_leaves=1,
                 max_atoms=self.max_atoms,
