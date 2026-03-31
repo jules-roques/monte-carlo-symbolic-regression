@@ -7,9 +7,10 @@ from typing import Optional
 
 import numpy as np
 
+from mcsr.algos.interface import SRAlgorithm
 from mcsr.tree.expression import Expression
-from mcsr.utils.fitness import compute_fitness
 from mcsr.tree.grammar import Atom, Grammar
+from mcsr.utils.metrics import compute_fitness
 
 
 @dataclass
@@ -50,7 +51,7 @@ def random_playout(
         current_index += 1
         leaves += chosen.arity - 1
 
-    predicted = Expression(sequence).evaluate(input_data)
+    predicted = Expression(sequence).compute(input_data)
     fitness = compute_fitness(predicted, target)
     return sequence, fitness
 
@@ -174,10 +175,7 @@ def _update_explored_status(node: UCTNode, valid_atoms: list[Atom]) -> None:
         node.fully_explored = True
 
 
-from mcsr.algos.interface import ResearchAlgoInterface
-
-
-class UCT(ResearchAlgoInterface):
+class UCT(SRAlgorithm):
     """Upper Confidence Bound applied to Trees (UCT) for Symbolic Regression."""
 
     def __init__(
@@ -186,18 +184,12 @@ class UCT(ResearchAlgoInterface):
         max_atoms: int = 15,
         num_iterations: int = 50_000,
         exploration_constant: float = 0.5,
-        seed: Optional[int] = None,
     ):
-        super().__init__(grammar=grammar, max_atoms=max_atoms, seed=seed)
+        super().__init__(grammar=grammar, max_atoms=max_atoms)
         self.num_iterations = num_iterations
         self.exploration_constant = exploration_constant
 
-    def fit(
-        self, input_data: np.ndarray, target: np.ndarray
-    ) -> tuple[Expression, float]:
-        if self.seed is not None:
-            random.seed(self.seed)
-            np.random.seed(self.seed)
+    def _fit(self, input_data: np.ndarray, target: np.ndarray) -> Expression:
 
         root = UCTNode()
         best = _BestState()
@@ -218,4 +210,4 @@ class UCT(ResearchAlgoInterface):
                 best_state=best,
             )
 
-        return Expression(best.best_sequence), best.best_fitness
+        return Expression(best.best_sequence)
