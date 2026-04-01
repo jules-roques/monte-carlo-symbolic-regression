@@ -1,6 +1,6 @@
 # Monte Carlo Symbolic Regression
 
-This repository implements Symbolic Regression using Monte Carlo Tree Search (MCTS) techniques, specifically UCT and its AlphaZero-inspired variant PUCT (Predictor + UCT). We test these algorithms on the [SRSD-easy benchmark](https://huggingface.co/datasets/yoshitomo-matsubara/srsd-feynman_easy) .
+This repository implements Symbolic Regression using Monte Carlo Tree Search (MCTS) techniques, specifically UCT and its AlphaZero-inspired variant PUCT (Predictor + UCT). We test these algorithms on the [SRSD-easy benchmark](https://huggingface.co/datasets/yoshitomo-matsubara/srsd-feynman_easy).
 
 ## Installation with uv
 
