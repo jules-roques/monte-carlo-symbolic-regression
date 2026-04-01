@@ -1,0 +1,3 @@
+- How to deal with the constants optimization ?
+- Is the R2 a good metric ? (sometimes it's close to 1 but the expression is very wrong)
+- Random Search is the most performant ??

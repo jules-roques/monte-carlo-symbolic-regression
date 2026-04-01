@@ -1,0 +1,8 @@
+{
+  "module": "mcsr.algos.random_search",
+  "class_name": "RandomSearch",
+  "kwargs": {
+    "max_atoms": 8,
+    "num_iterations": 50000
+  }
+}

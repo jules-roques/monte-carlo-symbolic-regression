@@ -1,12 +1,9 @@
 {
-  "algorithm": {
-    "module": "mcsr.algos.nmcs",
-    "class_name": "NMCTS",
-    "kwargs": {
-      "max_atoms": 8,
-      "nesting_level": 1,
-      "num_restarts": 20,
-      "seed": 42
-    }
+  "module": "mcsr.algos.nmcs",
+  "class_name": "NMCTS",
+  "kwargs": {
+    "max_atoms": 8,
+    "nesting_level": 1,
+    "num_restarts": 20
   }
 }

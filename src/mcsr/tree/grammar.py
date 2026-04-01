@@ -25,11 +25,6 @@ def safe_exp(x: np.ndarray) -> np.ndarray:
         return np.exp(np.clip(x, -500.0, 500.0))
 
 
-def safe_square(x: np.ndarray) -> np.ndarray:
-    with np.errstate(over="ignore", invalid="ignore"):
-        return x * x
-
-
 def safe_sin(x: np.ndarray) -> np.ndarray:
     with np.errstate(invalid="ignore"):
         return np.sin(x)
@@ -67,9 +62,8 @@ COS = UnaryOperator(name="cos", func=safe_cos)
 EXP = UnaryOperator(name="exp", func=safe_exp)
 LOG = UnaryOperator(name="log", func=safe_log)
 SQRT = UnaryOperator(name="sqrt", func=safe_sqrt)
-SQUARE = UnaryOperator(name="square", func=safe_square)
 
-UNARY_OPERATORS: list[Atom] = [SIN, COS, EXP, LOG, SQRT, SQUARE]
+UNARY_OPERATORS: list[Atom] = [SIN, COS, EXP, LOG, SQRT]
 
 CONSTANT_VALUES: list[float] = [0.1, 0.5, 1.0, 2.0, 3.0, 5.0, 10.0]
 CONSTANTS: list[Atom] = [Constant(name="const", value=v) for v in CONSTANT_VALUES]

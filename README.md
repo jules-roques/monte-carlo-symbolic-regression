@@ -1,101 +1,112 @@
 # Monte Carlo Symbolic Regression
 
-This repository implements Symbolic Regression using Monte Carlo Tree Search techniques, specifically UCT and its AlphaZero-inspired variant PUCT (Predictor + UCT).
+This repository implements Symbolic Regression using Monte Carlo Tree Search (MCTS) techniques, specifically UCT and its AlphaZero-inspired variant PUCT (Predictor + UCT). We test these algorithms on the [SRSD-easy benchmark](https://huggingface.co/datasets/yoshitomo-matsubara/srsd-feynman_easy) .
 
-## Installation
+## Installation with uv
 
+We recommend using [uv](https://docs.astral.sh/uv/) for fast and reliable package management. To install it:
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .  # Install the project in editable mode
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+Then, to install all the dependencies and the project in editable mode:
+```bash
+uv sync
 ```
 
-## Configuration de l'environnement (Hugging Face)
 
-Le dataset `SRSD-easy` est hébergé sur Hugging Face. Pour éviter un message d'avertissement de limite de requêtes (*Rate Limit*), vous pouvez vous authentifier via un token.
 
-Copiez le fichier de modèle `.env.example` et renommez-le en `.env` :
+## Environment Configuration
 
-```bash
-cp .env.example .env
-```
+### Hugging Face Authentication
 
-Ouvrez le fichier `.env` nouvellement créé et insérez votre token Hugging Face associé à la variable `HF_TOKEN`. Ce fichier précise aussi que le dossier de cache de Hugging Face de vos datasets sera stocké dans un répertoire `./data` pour éviter de tout retélécharger à chaque fois, ce dernier étant bien sûr ignoré par `.gitignore`.
-
-## Workflow Complet : De l'Entraînement à la Visualisation
-
-### 1. Entraîner le Predictor (PUCT)
-Pour utiliser PUCT de manière optimale, il faut entraîner le réseau de neurones (`PredictorNN`) qui servira de guide (Value et Prior Policy) pendant la recherche.
+The datasets are hosted on Hugging Face. To avoid rate-limiting warnings, you can create a Token on [Hugging Face](https://huggingface.co/settings/tokens) and authenticate via the Hugging Face [CLI](https://huggingface.co/docs/huggingface_hub/guides/cli):
 
 ```bash
-python src/train.py --epochs 30
-```
-*Le script extraira des trajectoires MCTS et générera des poids enregistrés dans le répertoire `checkpoints/`.*
-
-### 2. Lancer les Benchmarks
-Vous pouvez évaluer les différents algorithmes via les scripts de validation et de tests. 
-Par défaut, pour que l'évaluation reste rapide sur un seul CPU, le script ne teste que les **5 premières équations**. Vous pouvez modifier cette limite avec l'argument `--num-equations` (ou mettre `--num-equations 0` pour évaluer le dataset complet).
-
-**Tester UCT (Baseline) :**
-```bash
-python scripts/run_validation.py --config configs/uct_default.json --num-equations 5
+curl -LsSf https://hf.co/cli/install.sh | bash
+hf auth login
 ```
 
-**Tester PUCT (Deep Learning) :**
-```bash
-# Utilisera automatiquement le dernier checkpoint grâce à puct_nn.json
-python scripts/run_validation.py --config configs/puct_nn.json --num-equations 5
-```
 
-*Note: Vous pouvez aussi cibler des équations spécifiques via `--equations feynman-i.12.1,feynman-i.12.4`.*
-À chaque exécution, les résultats détaillés sont automatiquement enregistrés sous format JSON dans le dossier **`logs/`**.
+## Full Workflow: From Training to Visualization
 
-### 3. Dashboard et Visualisation
-Une fois vos runs terminés pour UCT et PUCT, vous pouvez générer une comparaison sous forme de graphique Box-plot :
+### 1. Train the Predictor (PUCT)
+
+For PUCT to perform optimally, you need to train the `PredictorNN` that guides the search (Value and Prior Policy).
 
 ```bash
-python scripts/visualize_benchmark.py
+uv run scripts/training/train.py --epochs 30
 ```
-L'image `benchmark_r2.png` sera sauvegardée dans le dossier **`results/`**, illustrant les performances $R^2$ de chaque algorithme évalué !
+*The script extracts MCTS trajectories and saves model weights in the `checkpoints/` directory.*
 
-## Lancer les Tests Unitaires
+### 2. Run Benchmarks
 
-```bash
-pytest tests/
-```
+Evaluate algorithms by discovering equations and then testing them.
 
-## Cas typique
-### NMCS
+**Discover Equations (Search phase):**
+Run the algorithm on the training and validation sets:
 ```bash
-source .venv/bin/activate && python scripts/run_validation.py --config configs/nmcs_default.json --max-true-atoms 6 && python scripts/visualize_benchmark.py
+uv run scripts/find.py --config configs/uct_default.json
 ```
-### UCT
+*This command saves the best discovered expressions as pickles in `artifacts/pickles/uct/`.*
+
+**Evaluate Results (Testing phase):**
+Confront the discovered expressions with the test set to compute R² and Normalized Edit Distance (NED):
 ```bash
-source .venv/bin/activate && python scripts/run_validation.py --config configs/uct_default.json --max-true-atoms 6 && python scripts/visualize_benchmark.py
-```
-### PUCT
-Training de base
-```bash
-source .venv/bin/activate && python src/train.py --epochs 30
-```
-Training supplémentaire pour affiner la distribution de proba sur les atomes simples
-```bash
-source .venv/bin/activate && python src/train_2.py --epochs 30
+uv run scripts/test.py --model_name uct
 ```
 
+
+### 3. Dashboard and Visualization
+
+Generate visual and structured reports once you have multiple models' results:
+
+**Generate Plots:**
+Create heatmaps, barplots, and boxplots for all models evaluated in a specific difficulty:
 ```bash
-source .venv/bin/activate && python scripts/run_validation.py --config configs/puct_nn.json --max-true-atoms 6 && python scripts/visualize_benchmark.py
+uv run scripts/plot.py
+```
+*Outputs are saved in `results/figures/`.*
+
+**Generate Markdown Table:**
+Create a detailed table of discovered equations in a Markdown file:
+```bash
+uv run scripts/markdown.py
+```
+*Results are saved in `results/equations.md`.*
+
+
+
+## Typical Use Cases
+
+### Nested Monte Carlo Search (NMCS)
+```bash
+uv run scripts/search.py --config configs/nmcs_default.json && uv run scripts/test.py --model_name nmcs
 ```
 
-### DGSR_MCTS
-Training
+### Upper Confidence Bound for Trees (UCT)
 ```bash
-source .venv/bin/activate && python src/train_dgsr.py --epochs 30
+uv run scripts/search.py --config configs/uct_default.json && uv run scripts/test.py --model_name uct
 ```
 
+### Predictor + UCT (PUCT)
+**Training:**
 ```bash
-source .venv/bin/activate && python scripts/run_validation.py --config configs/dgsr_mcts.json --max-true-atoms 6 && python scripts/visualize_benchmark.py
+uv run scripts/training/train.py --epochs 30
+```
+**Search and Test:**
+```bash
+uv run scripts/search.py --config configs/puct_nn.json && uv run scripts/test.py --model_name puct
 ```
 
-### + edit les fichiers de conf pour les hyperparametres des algos
+### Deep Generative Symbolic Regression (DGSR)
+**Training:**
+```bash
+uv run scripts/training/train_dgsr_mcts.py --epochs 30
+```
+**Search and Test:**
+```bash
+uv run scripts/search.py --config configs/DGSR.json && uv run scripts/test.py --model_name dgsr
+```
+
+## Configuration
+Algorithm hyperparameters (like `max_atoms` or `num_iterations`) can be tuned by editing the JSON files in the `configs/` directory.

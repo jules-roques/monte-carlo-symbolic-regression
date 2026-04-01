@@ -2,7 +2,7 @@
   "module": "mcsr.algos.uct",
   "class_name": "UCT",
   "kwargs": {
-    "max_atoms": 10,
+    "max_atoms": 8,
     "num_iterations": 50000,
     "exploration_constant": 0.5
   }

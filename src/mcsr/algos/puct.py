@@ -7,11 +7,11 @@ from typing import Optional
 
 import numpy as np
 
+from mcsr.algos.interface import SRAlgorithm
 from mcsr.tree.expression import Expression
 from mcsr.tree.grammar import Atom, Grammar
-from mcsr.algos.interface import ResearchAlgoInterface
-from mcsr.utils.predictor import PredictorInterface, DummyPredictor
-from mcsr.utils.fitness import compute_fitness
+from mcsr.utils.metrics import compute_fitness
+from mcsr.utils.predictor import DummyPredictor, PredictorInterface
 
 
 @dataclass
@@ -84,7 +84,7 @@ def random_playout(
         leaves += chosen.arity - 1
 
     try:
-        predicted = Expression(sequence).evaluate(input_data)
+        predicted = Expression(sequence).compute(input_data)
         fitness = compute_fitness(predicted, target)
     except Exception:
         fitness = 0.0
@@ -108,7 +108,7 @@ def puct_search(
     target: np.ndarray,
     exploration_constant: float,
     best_state: _BestState,
-    predictor: PredictorInterface
+    predictor: PredictorInterface,
 ) -> float:
     valid_atoms = grammar.get_valid_atoms(
         remaining_leaves, max_atoms, len(partial_sequence)
@@ -118,7 +118,9 @@ def puct_search(
     if not node._expansion_order and valid_atoms:
         _value, policy = predictor.predict(partial_sequence, valid_atoms, grammar)
         # Sort valid atoms by NN prior (descending) so best moves are tried first
-        node._expansion_order = sorted(valid_atoms, key=lambda a: policy.get(a, 0.0), reverse=True)
+        node._expansion_order = sorted(
+            valid_atoms, key=lambda a: policy.get(a, 0.0), reverse=True
+        )
 
     # --- Expansion Phase: try untried atoms one at a time (like UCT) ---
     while node.next_child_to_try < len(node._expansion_order):
@@ -178,20 +180,22 @@ def puct_search(
         target,
         exploration_constant,
         best_state,
-        predictor
+        predictor,
     )
 
     # Backpropagate
     node.sum_scores += score
     node.visit_count += 1
 
-    if all(c.fully_explored for c in node.children) and node.next_child_to_try >= len(node._expansion_order):
+    if all(c.fully_explored for c in node.children) and node.next_child_to_try >= len(
+        node._expansion_order
+    ):
         node.fully_explored = True
 
     return score
 
 
-class PUCT(ResearchAlgoInterface):
+class PUCT(SRAlgorithm):
     """Predictor + Upper Confidence Bound applied to Trees (PUCT) for SR.
 
     Hybrid approach: uses UCT's proven UCB1 formula for selection, but
@@ -206,41 +210,42 @@ class PUCT(ResearchAlgoInterface):
         max_atoms: int = 15,
         num_iterations: int = 2000,
         exploration_constant: float = 1.0,
-        seed: Optional[int] = None,
         predictor: Optional[PredictorInterface] = None,
         checkpoint_path: Optional[str] = None,
         model_num_variables: Optional[int] = None,
     ):
-        super().__init__(grammar=grammar, max_atoms=max_atoms, seed=seed)
+        super().__init__(grammar=grammar, max_atoms=max_atoms)
         self.num_iterations = num_iterations
         self.exploration_constant = exploration_constant
-        
+
         if predictor is not None:
             self.predictor = predictor
         elif checkpoint_path is not None:
-            import torch
             import os
+
+            import torch
+
             from mcsr.utils.predictor import PredictorNN
-            if model_num_variables is not None and model_num_variables != grammar.num_variables:
-                model_grammar = Grammar(num_variables=model_num_variables)
+
+            if (
+                model_num_variables is not None
+            ):  # Simplification as Grammar doesn't store num_variables
+                model_grammar = Grammar()
+                model_grammar.set_variables(model_num_variables)
             else:
                 model_grammar = grammar
             net = PredictorNN(grammar=model_grammar)
             if os.path.exists(checkpoint_path):
                 net.load_state_dict(torch.load(checkpoint_path, weights_only=True))
             else:
-                print(f"Warning: Checkpoint {checkpoint_path} not found. Using untrained weights.")
+                print(
+                    f"Warning: Checkpoint {checkpoint_path} not found. Using untrained weights."
+                )
             self.predictor = net
         else:
             self.predictor = DummyPredictor()
 
-    def fit(
-        self, input_data: np.ndarray, target: np.ndarray
-    ) -> tuple[Expression, float]:
-        if self.seed is not None:
-            random.seed(self.seed)
-            np.random.seed(self.seed)
-
+    def _fit(self, input_data: np.ndarray, target: np.ndarray) -> Expression:
         root = PUCTNode()
         best = _BestState()
 
@@ -258,7 +263,7 @@ class PUCT(ResearchAlgoInterface):
                 target=target,
                 exploration_constant=self.exploration_constant,
                 best_state=best,
-                predictor=self.predictor
+                predictor=self.predictor,
             )
 
-        return Expression(best.best_sequence), best.best_fitness
+        return Expression(best.best_sequence)

@@ -6,10 +6,10 @@ from typing import Optional
 
 import numpy as np
 
+from mcsr.algos.interface import SRAlgorithm
 from mcsr.tree.expression import Expression
-from mcsr.utils.fitness import compute_fitness
 from mcsr.tree.grammar import Atom, Grammar
-from mcsr.algos.interface import ResearchAlgoInterface
+from mcsr.utils.metrics import compute_fitness
 
 
 @dataclass
@@ -30,7 +30,7 @@ def evaluate_sequence(
     target: np.ndarray,
 ) -> float:
     try:
-        predicted = Expression(sequence).evaluate(input_data)
+        predicted = Expression(sequence).compute(input_data)
         return compute_fitness(predicted, target)
     except Exception:
         return 0.0
@@ -132,7 +132,7 @@ def nested_search(
     return sequence, final_score
 
 
-class NMCTS(ResearchAlgoInterface):
+class NMCTS(SRAlgorithm):
     """Nested Monte-Carlo Search (NMCS) for Symbolic Regression."""
 
     def __init__(
@@ -143,17 +143,11 @@ class NMCTS(ResearchAlgoInterface):
         num_restarts: int = 5,
         seed: Optional[int] = None,
     ):
-        super().__init__(grammar=grammar, max_atoms=max_atoms, seed=seed)
+        super().__init__(grammar=grammar, max_atoms=max_atoms)
         self.nesting_level = nesting_level
         self.num_restarts = num_restarts
 
-    def fit(
-        self, input_data: np.ndarray, target: np.ndarray
-    ) -> tuple[Expression, float]:
-        if self.seed is not None:
-            random.seed(self.seed)
-            np.random.seed(self.seed)
-
+    def _fit(self, input_data: np.ndarray, target: np.ndarray) -> Expression:
         best = _BestState()
 
         for _ in range(self.num_restarts):
@@ -169,4 +163,4 @@ class NMCTS(ResearchAlgoInterface):
             )
             _update_best(best, completed_sequence, score)
 
-        return Expression(best.best_sequence), best.best_fitness
+        return Expression(best.best_sequence)

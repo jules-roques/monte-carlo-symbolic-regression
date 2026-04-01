@@ -16,7 +16,6 @@ STR2SYMPY = {
     "exp": sympy.exp,
     "log": sympy.log,
     "sqrt": sympy.sqrt,
-    "square": lambda x: x**2,
 }
 
 

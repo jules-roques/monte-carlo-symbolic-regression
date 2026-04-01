@@ -6,5 +6,5 @@ __pycache__/
 results/
 .venv/
 data/
-src/monte_carlo_symbolic_regression.egg-info/
 .pytest_cache/
+.ruff_cache/
