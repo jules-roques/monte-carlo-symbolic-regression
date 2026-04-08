@@ -39,6 +39,27 @@ def plot_r2_heatmap(df: pd.DataFrame, output_dir: Path) -> None:
     plt.close()
 
 
+def plot_ned_heatmap(df: pd.DataFrame, output_dir: Path) -> None:
+    pivot_data = df.pivot(index="name", columns="method", values="ned")
+
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        pivot_data,
+        annot=True,
+        cmap="viridis",
+        fmt=".3f",
+        linewidths=0.5,
+        vmin=0.0,
+        vmax=1.0,
+    )
+    plt.title("NED Heatmap (Equation vs Method)", pad=15)
+    plt.ylabel("Equation")
+    plt.xlabel("Method")
+    plt.tight_layout()
+    plt.savefig(output_dir / "ned_heatmap.png", dpi=300)
+    plt.close()
+
+
 def plot_r2_bar_chart(df: pd.DataFrame, output_dir: Path) -> None:
     plt.figure(figsize=(14, 6))
     sns.barplot(data=df, x="name", y="test_r2_clipped", hue="method", palette="deep")
@@ -105,6 +126,7 @@ def generate_plots(results: list[dict], output_path: str | Path) -> None:
 
     plot_r2_heatmap(df, output_dir)
     plot_r2_bar_chart(df, output_dir)
+    plot_ned_heatmap(df, output_dir)
     plot_ned_bar_chart(df, output_dir)
     plot_metrics_box_plot(df, output_dir)
 
